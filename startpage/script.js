@@ -1,191 +1,197 @@
 // script.js
 
-// ====================
-// Slideshow & Clock Setup (Main Thread)
-// ====================
+(function () {
+  'use strict';
+  
+  // ====================
+  // Slideshow & Clock Setup (Main Thread)
+  // ====================
+  const imagePath = 'assets/';
+  const imageCount = 23;
+  const images = Array.from({ length: imageCount }, (_, i) => `side${i + 1}.gif`);
 
-const imagePath = 'assets/';
-const len = 23;
-const images = Array.from({ length: len }, (_, i) => `side${i + 1}.gif`);
+  // Cache DOM elements
+  const slideshow = document.getElementById('slideshow');
+  const codesContainer = document.getElementById('codes');
 
-function getSeed() {
-  const now = new Date();
-  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-}
+  // Random seed functions for daily default slide index
+  function getSeed() {
+    const now = new Date();
+    return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  }
 
-function seededRandom(seed) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
+  function seededRandom(seed) {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
 
-function getDailyDefaultSlideIndex() {
-  const seed = getSeed();
-  return Math.floor(seededRandom(seed) * len) + 1;
-}
+  function getDailyDefaultSlideIndex() {
+    const seed = getSeed();
+    return Math.floor(seededRandom(seed) * imageCount) + 1;
+  }
 
-let slideIndex = localStorage.getItem('slideIndex');
-const dailyDefaultSlideIndex = getDailyDefaultSlideIndex();
+  // Slide index initialization with localStorage
+  let slideIndex = localStorage.getItem('slideIndex');
+  const dailyDefaultSlideIndex = getDailyDefaultSlideIndex();
+  const currentDateString = new Date().toDateString();
 
-if (!slideIndex) {
-  slideIndex = dailyDefaultSlideIndex;
-  localStorage.setItem('slideIndex', slideIndex);
-} else {
-  slideIndex = parseInt(slideIndex, 10);
-  const lastAccessedDate = localStorage.getItem('lastAccessedDate');
-  const currentDate = new Date().toDateString();
-  if (lastAccessedDate !== currentDate) {
+  if (!slideIndex) {
     slideIndex = dailyDefaultSlideIndex;
     localStorage.setItem('slideIndex', slideIndex);
-  }
-}
-localStorage.setItem('lastAccessedDate', new Date().toDateString());
-
-// Build slideshow HTML once to reduce reflows.
-const slideshow = document.getElementById('slideshow');
-let slideshowHTML = '';
-images.forEach((img) => {
-  slideshowHTML += `<div class="mySlides">
-    <img src="${imagePath}${img}" style="cursor:pointer;" onclick="changeSlide(1)">
-  </div>`;
-});
-slideshow.innerHTML = slideshowHTML;
-
-let animating = false;
-function changeSlide(n) {
-  if (animating) return;
-  const slides = document.getElementsByClassName("mySlides");
-  const totalSlides = slides.length;
-  let nextSlideIndex = slideIndex + n;
-  if (nextSlideIndex > totalSlides) nextSlideIndex = 1;
-  else if (nextSlideIndex < 1) nextSlideIndex = totalSlides;
-
-  const currentSlide = slides[slideIndex - 1];
-  const nextSlide = slides[nextSlideIndex - 1];
-
-  // Prepare next slide.
-  nextSlide.style.transition = "none";
-  nextSlide.style.transform = `translateY(${n > 0 ? "100%" : "-100%"})`;
-  nextSlide.style.opacity = "1";
-  nextSlide.offsetHeight; // Force reflow.
-  nextSlide.style.transition = "transform 0.7s ease, opacity 0.7s ease";
-
-  // Animate slides.
-  currentSlide.style.transform = `translateY(${n > 0 ? "-100%" : "100%"})`;
-  currentSlide.style.opacity = "0";
-  nextSlide.style.transform = "translateY(0)";
-
-  animating = true;
-  setTimeout(() => {
-    currentSlide.style.opacity = "0";
-    currentSlide.style.transform = "translateY(0)";
-    currentSlide.style.transition = "none";
-    nextSlide.style.position = "relative";
-    currentSlide.style.position = "absolute";
-    slideIndex = nextSlideIndex;
-    localStorage.setItem('slideIndex', slideIndex);
-    animating = false;
-  }, 700);
-}
-
-function setSlide(n) {
-  const slides = document.getElementsByClassName("mySlides");
-  Array.from(slides).forEach((slide, i) => {
-    if (i === n - 1) {
-      slide.style.opacity = "1";
-      slide.style.position = "relative";
-      slide.style.transition = "none";
-      slide.style.transform = "none";
-    } else {
-      slide.style.opacity = "0";
-      slide.style.position = "absolute";
-      slide.style.transition = "none";
-      slide.style.transform = "none";
+  } else {
+    slideIndex = parseInt(slideIndex, 10);
+    const lastAccessedDate = localStorage.getItem('lastAccessedDate');
+    if (lastAccessedDate !== currentDateString) {
+      slideIndex = dailyDefaultSlideIndex;
+      localStorage.setItem('slideIndex', slideIndex);
     }
+  }
+  localStorage.setItem('lastAccessedDate', currentDateString);
+
+  // Build slideshow HTML once to reduce reflows.
+  let slideshowHTML = '';
+  images.forEach((img) => {
+    slideshowHTML += `<div class="mySlides">
+      <img src="${imagePath}${img}" style="cursor:pointer;" onclick="changeSlide(1)">
+    </div>`;
   });
-}
-setSlide(slideIndex);
+  slideshow.innerHTML = slideshowHTML;
 
-let scrollDebounce;
-window.addEventListener("wheel", (e) => {
-  clearTimeout(scrollDebounce);
-  scrollDebounce = setTimeout(() => {
-    const direction = e.deltaY > 0 ? 1 : -1;
-    changeSlide(direction);
-  }, 100);
-});
+  let animating = false;
 
-function updateClock() {
-  const now = new Date();
-  const day = now.toLocaleDateString('en-GB', { weekday: 'long' });
-  const dayOfMonth = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const dateString = `${day.charAt(0).toUpperCase() + day.slice(1).toLowerCase()} ${dayOfMonth}-${month}-${year} ${time}`;
-  document.getElementById('codes').textContent = dateString;
-}
-updateClock();
-setInterval(updateClock, 1000);
+  // Slide change function with optimized transitions.
+  window.changeSlide = function (n) { // Expose for inline onclick usage.
+    if (animating) return;
+    const slides = document.getElementsByClassName("mySlides");
+    const totalSlides = slides.length;
+    let nextSlideIndex = slideIndex + n;
+    if (nextSlideIndex > totalSlides) nextSlideIndex = 1;
+    else if (nextSlideIndex < 1) nextSlideIndex = totalSlides;
 
-// ====================
-// OffscreenCanvas & Web Worker Setup (Particle Animation)
-// ====================
+    const currentSlide = slides[slideIndex - 1];
+    const nextSlide = slides[nextSlideIndex - 1];
 
-// Get the canvas element.
-const canvas = document.getElementById("canvas");
+    // Prepare next slide without animation (force reflow)
+    nextSlide.style.transition = "none";
+    nextSlide.style.transform = `translateY(${n > 0 ? "100%" : "-100%"})`;
+    nextSlide.style.opacity = "1";
+    nextSlide.offsetHeight; // Force reflow.
+    nextSlide.style.transition = "transform 0.7s ease, opacity 0.7s ease";
 
-// Check if OffscreenCanvas is supported.
-if (canvas.transferControlToOffscreen) {
-  // Create an OffscreenCanvas from the main canvas.
-  const offscreen = canvas.transferControlToOffscreen();
+    // Animate the current and next slides.
+    currentSlide.style.transform = `translateY(${n > 0 ? "-100%" : "100%"})`;
+    currentSlide.style.opacity = "0";
+    nextSlide.style.transform = "translateY(0)";
 
-  // Create a new worker from worker.js.
-  const worker = new Worker('worker.js');
+    animating = true;
+    setTimeout(() => {
+      currentSlide.style.opacity = "0";
+      currentSlide.style.transform = "translateY(0)";
+      currentSlide.style.transition = "none";
+      nextSlide.style.position = "relative";
+      currentSlide.style.position = "absolute";
+      slideIndex = nextSlideIndex;
+      localStorage.setItem('slideIndex', slideIndex);
+      animating = false;
+    }, 700);
+  };
 
-  // Post initial data including the OffscreenCanvas reference.
-  worker.postMessage({
-    type: 'init',
-    canvas: offscreen,
-    width: window.innerWidth,
-    height: window.innerHeight
-  }, [offscreen]);
-
-  // Forward mouse move events.
-  document.addEventListener('mousemove', (e) => {
-    worker.postMessage({
-      type: 'mouse',
-      x: e.clientX,
-      y: e.clientY,
-      pressed: false
+  // Set slide visibility based on the current index.
+  function setSlide(n) {
+    const slides = document.getElementsByClassName("mySlides");
+    Array.from(slides).forEach((slide, i) => {
+      if (i === n - 1) {
+        slide.style.opacity = "1";
+        slide.style.position = "relative";
+        slide.style.transition = "none";
+        slide.style.transform = "none";
+      } else {
+        slide.style.opacity = "0";
+        slide.style.position = "absolute";
+        slide.style.transition = "none";
+        slide.style.transform = "none";
+      }
     });
-  });
-  document.addEventListener('mousedown', (e) => {
-    worker.postMessage({
-      type: 'mouse',
-      x: e.clientX,
-      y: e.clientY,
-      pressed: true
-    });
-  });
-  document.addEventListener('mouseup', (e) => {
-    worker.postMessage({
-      type: 'mouse',
-      x: e.clientX,
-      y: e.clientY,
-      pressed: false
-    });
+  }
+  setSlide(slideIndex);
+
+  // Debounce for wheel event
+  let scrollDebounce;
+  window.addEventListener("wheel", (e) => {
+    clearTimeout(scrollDebounce);
+    scrollDebounce = setTimeout(() => {
+      const direction = e.deltaY > 0 ? 1 : -1;
+      changeSlide(direction);
+    }, 100);
   });
 
-  // Forward window resize events.
-  window.addEventListener("resize", () => {
+  // Clock update function.
+  function updateClock() {
+    const now = new Date();
+    const day = now.toLocaleDateString('en-GB', { weekday: 'long' });
+    const dayOfMonth = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateString = `${day.charAt(0).toUpperCase() + day.slice(1).toLowerCase()} ${dayOfMonth}-${month}-${year} ${time}`;
+    codesContainer.textContent = dateString;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ====================
+  // OffscreenCanvas & Web Worker Setup (Particle Animation)
+  // ====================
+
+  const canvas = document.getElementById("canvas");
+
+  if (canvas.transferControlToOffscreen) {
+    const offscreen = canvas.transferControlToOffscreen();
+    const worker = new Worker('worker.js');
+
+    // Initialize worker with OffscreenCanvas and current window dimensions.
     worker.postMessage({
-      type: 'resize',
+      type: 'init',
+      canvas: offscreen,
       width: window.innerWidth,
       height: window.innerHeight
-    });
-  });
-} else {
-  console.error("OffscreenCanvas is not supported by your browser.");
-}
+    }, [offscreen]);
 
-// The rest of the main thread code (slideshow and clock) remains active.
+    // Consolidated mouse event handler function.
+    const canvasState = { x: null, y: null, pressed: false };
+
+    function sendMouseEvent(e, pressed = canvasState.pressed) {
+      canvasState.x = e.clientX;
+      canvasState.y = e.clientY;
+      canvasState.pressed = pressed;
+      worker.postMessage({
+        type: 'mouse',
+        x: canvasState.x,
+        y: canvasState.y,
+        pressed: canvasState.pressed,
+      });
+    }
+
+    // Forward mouse events.
+    ['mousemove', 'mousedown', 'mouseup'].forEach((eventType) => {
+      document.addEventListener(eventType, (e) => {
+        const isPressed = eventType === 'mousedown' ? true :
+                          eventType === 'mouseup' ? false :
+                          canvasState.pressed;
+        sendMouseEvent(e, isPressed);
+      });
+    });
+
+    // Resize event forwarding.
+    window.addEventListener("resize", () => {
+      worker.postMessage({
+        type: 'resize',
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    });
+  } else {
+    console.error("OffscreenCanvas is not supported by your browser.");
+  }
+  // The main thread continues running the slideshow and clock functionalities.
+})();

@@ -4,18 +4,15 @@
   <meta charset="utf-8">
   <link rel="icon" type="image/x-icon" href="assets/favicon.svg">
   <link rel="stylesheet" href="style.css">
-  <title>~</title>
+  <title>My WebApp</title>
 </head>
 <body>
-  <div class="main">
-    <div id="data-wrapper">
-      <span>
-        <h1>おかえりなさいませ, <span id="flair">X A M P</span></h1>
-        <br>
-      </span>
+  <main class="container">
+    <section id="data-wrapper">
+      <h1>おかえりなさいませ, <span id="flair">X A M P</span></h1>
       <nav>
-        <ul class="blue">
-          <a class="nav-title">| Social |</a>
+        <ul class="nav-group social">
+          <li class="nav-title">| Social |</li>
           <li><a href="https://www.facebook.com/">Facebook</a></li>
           <li><a href="https://www.youtube.com/">YouTube</a></li>
           <li><a href="https://www.reddit.com/">Reddit</a></li>
@@ -23,8 +20,8 @@
           <li><a href="https://discord.com/channels/@me">Discord</a></li>
           <li><a href="https://www.tumblr.com/">Tumblr</a></li>
         </ul>
-        <ul class="red">
-          <a class="nav-title">| Anime |</a>
+        <ul class="nav-group anime">
+          <li class="nav-title">| Anime |</li>
           <li><a href="https://animekai.to/home">AnimeKAI</a></li>
           <li><a href="https://animesuki.to/home">AnimeSuki</a></li>
           <li><a href="https://hianime.to/home">HiAnime</a></li>
@@ -32,8 +29,8 @@
           <li><a href="https://nyaa.si/">Nyaa</a></li>
           <li><a href="https://everythingmoe.com/">EverythingMoe</a></li>
         </ul>
-        <ul class="green">
-          <a class="nav-title">| Pirate |</a>
+        <ul class="nav-group pirate">
+          <li class="nav-title">| Pirate |</li>
           <li><a href="https://1337x.to/">1337x</a></li>
           <li><a href="https://www.bitsearch.to/">Bitsearch</a></li>
           <li><a href="https://torrentbay.st/">Torrent Bay</a></li>
@@ -41,8 +38,8 @@
           <li><a href="https://annas-archive.org/">Anna's Archive</a></li>
           <li><a href="https://filecr.com/en/">FileCR</a></li>
         </ul>
-        <ul class="yellow">
-          <a class="nav-title">| Misc |</a>
+        <ul class="nav-group misc">
+          <li class="nav-title">| Misc |</li>
           <li><a href="https://chat.deepseek.com/">Deepseek</a></li>
           <li><a href="https://chat.qwen.ai/">Qwen</a></li>
           <li><a href="https://chatgpt.com/">ChatGPT</a></li>
@@ -52,9 +49,9 @@
         </ul>
       </nav>
       <div id="codes"></div>
-    </div>
-    <div id="slideshow"></div>
-  </div>
+    </section>
+    <aside id="slideshow"></aside>
+  </main>
   <canvas id="canvas"></canvas>
   <script src="script.js"></script>
 </body>

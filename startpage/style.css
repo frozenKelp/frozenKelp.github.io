@@ -3,6 +3,10 @@
   src: url('assets/Iosevka.ttf');
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   display: flex;
   justify-content: center;
@@ -11,7 +15,7 @@ body {
   margin: 0;
   font-family: 'Iosevka';
   font-size: 20px;
-  background-color: #111111;
+  background-color: #111;
   overflow: hidden;
 }
 
@@ -19,79 +23,65 @@ h1 {
   color: #FEFFFA;
   font-weight: normal;
   text-align: center;
-  padding-top: 20px;
-  padding-bottom: 10px;
+  padding: 20px 0 10px;
   margin-top: -40px;
 }
 
 nav {
-  display: inline-block;
-  color: #999999;
+  display: flex;
+  justify-content: center;
+  color: #999;
   font-size: 20px;
   margin: 0 auto;
+  flex-wrap: wrap;
 }
 
-ul {
-  display: table-cell;
-  text-align: center;
-  padding: 10px 25px;
+.nav-group {
   list-style: none;
+  padding: 10px 25px;
   border-right: 1px solid #232328;
-  transition: 0.8s;
+  transition: color 0.8s;
   cursor: default;
+  text-align: center;
 }
 
-ul:last-of-type {
+.nav-group:last-of-type {
   border-right: none;
 }
 
-li {
+.nav-group li {
   margin: 10px 0;
 }
 
-ul>li:first-of-type {
+.nav-group li:first-child {
   padding-top: 5px;
-}
-
-ul>li>a {
-  text-decoration: none;
-  color: #858585;
-  transition: color 0.8s;
-}
-
-ul>li>a:hover {
-  color: white;
-}
-
-ul.green:hover {
-  color: #4FAE0F;
-}
-
-ul.blue:hover {
-  color: #0972D6;
-}
-
-ul.red:hover {
-  color: #ed3434;
-}
-
-ul.yellow:hover {
-  color: #edd934;
-}
-
-.nav-title {
   font-size: 22px;
   font-weight: bold;
   cursor: default;
 }
 
-.main {
+.nav-group a {
+  text-decoration: none;
+  color: #858585;
+  transition: color 0.8s;
+}
+
+.nav-group a:hover {
+  color: white;
+}
+
+/* Hover group color transitions */
+.nav-group.social:hover { color: #0972D6; }
+.nav-group.anime:hover { color: #ed3434; }
+.nav-group.pirate:hover { color: #4FAE0F; }
+.nav-group.misc:hover { color: #edd934; }
+
+.container {
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   text-align: center;
-  font-family: 'Iosevka';
   background-color: #181818;
   border: 5px solid #18181D;
 }
@@ -111,7 +101,6 @@ ul.yellow:hover {
   top: 0;
   left: 0;
   opacity: 0;
-  transform: translateY(0);
   transition: transform 0.7s ease, opacity 0.7s ease;
   will-change: transform, opacity;
   pointer-events: none;
@@ -121,15 +110,11 @@ ul.yellow:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
   display: block;
   background-color: #18181D;
-  image-rendering: auto;
 }
 
-#flair {
-  color: #0972D6;
-}
+#flair { color: #0972D6; }
 
 #data-wrapper {
   display: flex;
