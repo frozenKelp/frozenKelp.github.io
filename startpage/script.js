@@ -1,4 +1,6 @@
-// Slideshow setup and daily randomizer
+// ====================================================
+// Slideshow and Daily Randomizer Setup
+// ====================================================
 const imagePath = 'assets/';
 const len = 23;
 const images = Array.from({ length: len }, (_, i) => `side${i + 1}.gif`);
@@ -33,10 +35,9 @@ if (!slideIndex) {
     localStorage.setItem('slideIndex', slideIndex);
   }
 }
-
 localStorage.setItem('lastAccessedDate', new Date().toDateString());
 
-// Build the slideshow in one go (reducing DOM reflow)
+// Build slideshow HTML in one go to reduce reflows.
 const slideshow = document.getElementById('slideshow');
 let slideshowHTML = '';
 images.forEach((img) => {
@@ -46,10 +47,11 @@ images.forEach((img) => {
 });
 slideshow.innerHTML = slideshowHTML;
 
-// Flag to prevent rapid-fire animations.
+// ====================================================
+// Slideshow Animations and Interaction
+// ====================================================
 let animating = false;
 
-// Change slide function with scroll animation.
 function changeSlide(n) {
   if (animating) return;
   const slides = document.getElementsByClassName("mySlides");
@@ -66,18 +68,16 @@ function changeSlide(n) {
   nextSlide.style.transition = "none";
   nextSlide.style.transform = `translateY(${n > 0 ? "100%" : "-100%"})`;
   nextSlide.style.opacity = "1";
-  // Force reflow
-  nextSlide.offsetHeight;
+  nextSlide.offsetHeight; // Force reflow
   nextSlide.style.transition = "transform 0.7s ease, opacity 0.7s ease";
 
-  // Animate current slide out and next slide in
+  // Animate slides
   currentSlide.style.transform = `translateY(${n > 0 ? "-100%" : "100%"})`;
   currentSlide.style.opacity = "0";
   nextSlide.style.transform = "translateY(0)";
 
   animating = true;
   setTimeout(() => {
-    // Reset styles post-animation
     currentSlide.style.opacity = "0";
     currentSlide.style.transform = "translateY(0)";
     currentSlide.style.transition = "none";
@@ -91,7 +91,6 @@ function changeSlide(n) {
   }, 700);
 }
 
-// Initialize the slideshow by displaying only the active slide.
 function setSlide(n) {
   const slides = document.getElementsByClassName("mySlides");
   Array.from(slides).forEach((slide, i) => {
@@ -110,7 +109,7 @@ function setSlide(n) {
 }
 setSlide(slideIndex);
 
-// Debounce mouse wheel events to avoid performance hits.
+// Debounce wheel events to prevent excessive calls.
 let scrollDebounce;
 window.addEventListener("wheel", (e) => {
   clearTimeout(scrollDebounce);
@@ -120,7 +119,9 @@ window.addEventListener("wheel", (e) => {
   }, 100);
 });
 
-// Clock using setInterval for consistency.
+// ====================================================
+// Clock Update with setInterval
+// ====================================================
 function updateClock() {
   const now = new Date();
   const day = now.toLocaleDateString('en-GB', { weekday: 'long' });
@@ -134,12 +135,14 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-/* ========= Canvas Particle Animation ========= */
+// ====================================================
+// Canvas Particle Animation with Optimized Collision Detection
+// ====================================================
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 let width, height, particles;
 
-// Configuration Object
+// Configuration Options
 const opts = {
   particleColor: "rgb(143, 143, 143)",
   lineColor: "rgb(143, 143, 143)",
@@ -163,7 +166,7 @@ const mouse = {
   pressed: false,
 };
 
-// Canvas resizing with debounce
+// Canvas resize with debounce on window resizing.
 function resizeCanvas() {
   width = canvas.width = window.innerWidth;
   height = canvas.height = window.innerHeight;
@@ -174,7 +177,7 @@ window.addEventListener("resize", () => {
 });
 resizeCanvas();
 
-// Mouse event listeners
+// Mouse event listeners.
 document.addEventListener('mousemove', (e) => {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
@@ -186,8 +189,13 @@ document.addEventListener('mouseup', () => {
   mouse.pressed = false;
 });
 
+// ----------------------------------------------------
+// Particle Class with Unique IDs
+// ----------------------------------------------------
+let particleIdCounter = 0;
 class Particle {
   constructor() {
+    this.id = particleIdCounter++;
     this.x = Math.random() * width;
     this.y = Math.random() * height;
     this.speed = opts.defaultSpeed + Math.random() * opts.variantSpeed;
@@ -204,8 +212,8 @@ class Particle {
     this.checkBorders();
     this.x += this.vector.x;
     this.y += this.vector.y;
-    const currentSpeedSq = this.vector.x * this.vector.x + this.vector.y * this.vector.y;
-    if (currentSpeedSq > opts.maxSpeed * opts.maxSpeed) {
+    const currentSpeedSq = this.vector.x ** 2 + this.vector.y ** 2;
+    if (currentSpeedSq > opts.maxSpeed ** 2) {
       const currentSpeed = Math.sqrt(currentSpeedSq);
       const scale = opts.maxSpeed / currentSpeed;
       this.vector.x *= scale;
@@ -228,38 +236,80 @@ class Particle {
   }
 }
 
-function detectCollisions(particlesArray) {
-  for (let i = 0; i < particlesArray.length; i++) {
-    for (let j = i + 1; j < particlesArray.length; j++) {
-      const p1 = particlesArray[i];
-      const p2 = particlesArray[j];
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const distSq = dx * dx + dy * dy;
-      const minDist = p1.radius + p2.radius;
-      if (distSq < minDist * minDist) {
-        // Swap velocity vectors (elastic collision)
-        const temp = { x: p1.vector.x, y: p1.vector.y };
-        p1.vector.x = p2.vector.x;
-        p1.vector.y = p2.vector.y;
-        p2.vector.x = temp.x;
-        p2.vector.y = temp.y;
+// ----------------------------------------------------
+// Optimized Collision Detection via Spatial Hashing
+// ----------------------------------------------------
+function detectCollisionsOptimized(particlesArray) {
+  const cellSize = 50; // Tune this size as needed
+  const grid = new Map();
 
-        // Resolve overlap
-        const dist = Math.sqrt(distSq);
-        const overlap = (minDist - dist) / 2;
-        const offsetX = (dx / dist) * overlap;
-        const offsetY = (dy / dist) * overlap;
-        p1.x -= offsetX;
-        p1.y -= offsetY;
-        p2.x += offsetX;
-        p2.y += offsetY;
+  // Helper function: get cell key from coordinates
+  function getCellKey(x, y) {
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+    return `${col},${row}`;
+  }
+
+  // Populate grid with particles.
+  for (const p of particlesArray) {
+    const key = getCellKey(p.x, p.y);
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(p);
+  }
+
+  // Track processed pairs to avoid duplicates.
+  const checkedPairs = new Set();
+
+  grid.forEach((cellParticles, key) => {
+    const [col, row] = key.split(',').map(Number);
+    // Check current and neighboring cells.
+    for (let dc = -1; dc <= 1; dc++) {
+      for (let dr = -1; dr <= 1; dr++) {
+        const neighborKey = `${col + dc},${row + dr}`;
+        if (grid.has(neighborKey)) {
+          const neighborParticles = grid.get(neighborKey);
+          for (const p1 of cellParticles) {
+            for (const p2 of neighborParticles) {
+              if (p1 === p2) continue;
+              // Process each pair only once.
+              const pairKey = p1.id < p2.id ? `${p1.id},${p2.id}` : `${p2.id},${p1.id}`;
+              if (checkedPairs.has(pairKey)) continue;
+              checkedPairs.add(pairKey);
+
+              const dx = p2.x - p1.x;
+              const dy = p2.y - p1.y;
+              const distSq = dx * dx + dy * dy;
+              const minDist = p1.radius + p2.radius;
+              if (distSq < minDist * minDist) {
+                // Elastic collision: swap vectors.
+                const temp = { x: p1.vector.x, y: p1.vector.y };
+                p1.vector.x = p2.vector.x;
+                p1.vector.y = p2.vector.y;
+                p2.vector.x = temp.x;
+                p2.vector.y = temp.y;
+                // Resolve any overlap.
+                const dist = Math.sqrt(distSq);
+                const overlap = (minDist - dist) / 2;
+                const offsetX = (dx / dist) * overlap;
+                const offsetY = (dy / dist) * overlap;
+                p1.x -= offsetX;
+                p1.y -= offsetY;
+                p2.x += offsetX;
+                p2.y += offsetY;
+              }
+            }
+          }
+        }
       }
     }
-  }
+  });
 }
 
+// ----------------------------------------------------
+// Particle Interaction Functions
+// ----------------------------------------------------
 function applyAttraction(particlesArray) {
+  // Check pairwise interactions (O(n²)); can be optimized similarly if needed.
   for (let i = 0; i < particlesArray.length; i++) {
     for (let j = i + 1; j < particlesArray.length; j++) {
       const p1 = particlesArray[i];
@@ -290,9 +340,7 @@ function applyMouseInteraction(particlesArray) {
     if (distSq < opts.interactionRadiusSq && distSq > 25) {
       const distance = Math.sqrt(distSq);
       let force = opts.forceStrength / distSq;
-      if (mouse.pressed) {
-        force = -force;
-      }
+      if (mouse.pressed) force = -force;
       particle.vector.x += (dx / distance) * force;
       particle.vector.y += (dy / distance) * force;
     }
@@ -300,6 +348,8 @@ function applyMouseInteraction(particlesArray) {
 }
 
 function drawConnections(particlesArray) {
+  // Note: This double loop is expensive with many particles. For high counts,
+  // consider optimizing similar to collision detection or limiting drawing frequency.
   const rgb = opts.lineColor.match(/\d+/g);
   for (let i = 0; i < particlesArray.length; i++) {
     for (let j = i + 1; j < particlesArray.length; j++) {
@@ -320,6 +370,9 @@ function drawConnections(particlesArray) {
   }
 }
 
+// ----------------------------------------------------
+// Main Animation Loop
+// ----------------------------------------------------
 function loop() {
   applyAttraction(particles);
   applyMouseInteraction(particles);
@@ -330,9 +383,10 @@ function loop() {
     p.draw();
   });
 
-  detectCollisions(particles);
-  drawConnections(particles);
+  // Use optimized collision detection.
+  detectCollisionsOptimized(particles);
 
+  drawConnections(particles);
   requestAnimationFrame(loop);
 }
 
@@ -343,5 +397,4 @@ function setup() {
   }
   loop();
 }
-
 setup();
