@@ -136,7 +136,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 // ====================================================
-// Canvas Particle Animation with Optimized Collision Detection
+// Canvas Particle Animation with Optimized Collision Detection and Attraction
 // ====================================================
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -146,7 +146,7 @@ let width, height, particles;
 const opts = {
   particleColor: "rgb(143, 143, 143)",
   lineColor: "rgb(143, 143, 143)",
-  particleAmount: 80,
+  particleAmount: 40, // Reduced particle count from 80 to 40
   defaultSpeed: 0.5,
   variantSpeed: 0.5,
   defaultRadius: 2,
@@ -165,6 +165,12 @@ const mouse = {
   y: null,
   pressed: false,
 };
+
+// Check for OffscreenCanvas support; if available, you might consider offloading
+// your animation work to a Web Worker. (Full implementation would require further refactoring.)
+if (canvas.transferControlToOffscreen) {
+  console.log("OffscreenCanvas is available. Consider moving the particle animation to a Web Worker for better performance.");
+}
 
 // Canvas resize with debounce on window resizing.
 function resizeCanvas() {
@@ -243,26 +249,22 @@ function detectCollisionsOptimized(particlesArray) {
   const cellSize = 50; // Tune this size as needed
   const grid = new Map();
 
-  // Helper function: get cell key from coordinates
   function getCellKey(x, y) {
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
     return `${col},${row}`;
   }
 
-  // Populate grid with particles.
   for (const p of particlesArray) {
     const key = getCellKey(p.x, p.y);
     if (!grid.has(key)) grid.set(key, []);
     grid.get(key).push(p);
   }
 
-  // Track processed pairs to avoid duplicates.
   const checkedPairs = new Set();
 
   grid.forEach((cellParticles, key) => {
     const [col, row] = key.split(',').map(Number);
-    // Check current and neighboring cells.
     for (let dc = -1; dc <= 1; dc++) {
       for (let dr = -1; dr <= 1; dr++) {
         const neighborKey = `${col + dc},${row + dr}`;
@@ -271,7 +273,6 @@ function detectCollisionsOptimized(particlesArray) {
           for (const p1 of cellParticles) {
             for (const p2 of neighborParticles) {
               if (p1 === p2) continue;
-              // Process each pair only once.
               const pairKey = p1.id < p2.id ? `${p1.id},${p2.id}` : `${p2.id},${p1.id}`;
               if (checkedPairs.has(pairKey)) continue;
               checkedPairs.add(pairKey);
@@ -306,50 +307,65 @@ function detectCollisionsOptimized(particlesArray) {
 }
 
 // ----------------------------------------------------
-// Particle Interaction Functions
+// Optimized Attraction Using Spatial Hashing
 // ----------------------------------------------------
-function applyAttraction(particlesArray) {
-  // Check pairwise interactions (O(n²)); can be optimized similarly if needed.
-  for (let i = 0; i < particlesArray.length; i++) {
-    for (let j = i + 1; j < particlesArray.length; j++) {
-      const p1 = particlesArray[i];
-      const p2 = particlesArray[j];
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const distSq = dx * dx + dy * dy;
-      if (distSq < 10000 && distSq > 25) {
-        const dist = Math.sqrt(distSq);
-        const force = opts.attractionStrength / distSq;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        p1.vector.x += fx;
-        p1.vector.y += fy;
-        p2.vector.x -= fx;
-        p2.vector.y -= fy;
-      }
-    }
+function applyAttractionOptimized(particlesArray) {
+  const cellSize = 50; // Same as used for collisions.
+  const grid = new Map();
+  
+  function getCellKey(x, y) {
+    const col = Math.floor(x / cellSize);
+    const row = Math.floor(y / cellSize);
+    return `${col},${row}`;
   }
-}
-
-function applyMouseInteraction(particlesArray) {
-  if (mouse.x === null || mouse.y === null) return;
-  particlesArray.forEach(particle => {
-    const dx = particle.x - mouse.x;
-    const dy = particle.y - mouse.y;
-    const distSq = dx * dx + dy * dy;
-    if (distSq < opts.interactionRadiusSq && distSq > 25) {
-      const distance = Math.sqrt(distSq);
-      let force = opts.forceStrength / distSq;
-      if (mouse.pressed) force = -force;
-      particle.vector.x += (dx / distance) * force;
-      particle.vector.y += (dy / distance) * force;
+  
+  // Populate grid with particles.
+  particlesArray.forEach(p => {
+    const key = getCellKey(p.x, p.y);
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(p);
+  });
+  
+  const checkedPairs = new Set();
+  grid.forEach((cellParticles, key) => {
+    const [col, row] = key.split(',').map(Number);
+    for (let dc = -1; dc <= 1; dc++) {
+      for (let dr = -1; dr <= 1; dr++) {
+        const neighborKey = `${col + dc},${row + dr}`;
+        if (grid.has(neighborKey)) {
+          const neighborParticles = grid.get(neighborKey);
+          for (const p1 of cellParticles) {
+            for (const p2 of neighborParticles) {
+              if (p1 === p2) continue;
+              const pairKey = p1.id < p2.id ? `${p1.id},${p2.id}` : `${p2.id},${p1.id}`;
+              if (checkedPairs.has(pairKey)) continue;
+              checkedPairs.add(pairKey);
+              
+              const dx = p2.x - p1.x;
+              const dy = p2.y - p1.y;
+              const distSq = dx * dx + dy * dy;
+              if (distSq < opts.interactionRadiusSq && distSq > 25) {
+                const dist = Math.sqrt(distSq);
+                const force = opts.attractionStrength / distSq;
+                const fx = (dx / dist) * force;
+                const fy = (dy / dist) * force;
+                p1.vector.x += fx;
+                p1.vector.y += fy;
+                p2.vector.x -= fx;
+                p2.vector.y -= fy;
+              }
+            }
+          }
+        }
+      }
     }
   });
 }
 
+// ----------------------------------------------------
+// Particle Connection Drawing
+// ----------------------------------------------------
 function drawConnections(particlesArray) {
-  // Note: This double loop is expensive with many particles. For high counts,
-  // consider optimizing similar to collision detection or limiting drawing frequency.
   const rgb = opts.lineColor.match(/\d+/g);
   for (let i = 0; i < particlesArray.length; i++) {
     for (let j = i + 1; j < particlesArray.length; j++) {
@@ -371,11 +387,29 @@ function drawConnections(particlesArray) {
 }
 
 // ----------------------------------------------------
-// Main Animation Loop
+// Main Animation Loop with Reduced Frequency for Connections
 // ----------------------------------------------------
+let frameCount = 0;
 function loop() {
-  applyAttraction(particles);
-  applyMouseInteraction(particles);
+  // Apply optimized attraction using spatial hashing.
+  applyAttractionOptimized(particles);
+
+  // Mouse interaction remains the same.
+  if (mouse.x !== null && mouse.y !== null) {
+    particles.forEach(particle => {
+      const dx = particle.x - mouse.x;
+      const dy = particle.y - mouse.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < opts.interactionRadiusSq && distSq > 25) {
+        const distance = Math.sqrt(distSq);
+        let force = opts.forceStrength / distSq;
+        if (mouse.pressed) force = -force;
+        particle.vector.x += (dx / distance) * force;
+        particle.vector.y += (dy / distance) * force;
+      }
+    });
+  }
+
   ctx.clearRect(0, 0, width, height);
 
   particles.forEach(p => {
@@ -383,10 +417,15 @@ function loop() {
     p.draw();
   });
 
-  // Use optimized collision detection.
+  // Optimized collision detection remains unchanged.
   detectCollisionsOptimized(particles);
 
-  drawConnections(particles);
+  // Draw connections only every 2 frames to save performance.
+  if (frameCount % 2 === 0) {
+    drawConnections(particles);
+  }
+  frameCount++;
+
   requestAnimationFrame(loop);
 }
 
