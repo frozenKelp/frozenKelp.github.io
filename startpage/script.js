@@ -69,16 +69,8 @@ function updateClock() {
 	setTimeout(updateClock, 1000);
 }
 updateClock();
-/******************************************************
- * Optimized Background Particle Animation with Mouse Interaction
- * 
- * Features:
- * - Particles with variable speed, collision, and optional attractions.
- * - Combined double loops for linking lines to avoid redundant calculations.
- * - Squared distance checks to avoid expensive square root operations.
- * - Mouse interactions: repelled by pointer, attracted when pressed.
- * - Speed limiting applied to the particles.
- ******************************************************/
+
+
 
 /* ========= Canvas and Global Variables ========= */
 const canvas = document.getElementById("canvas");
@@ -97,7 +89,7 @@ const opts = {
     variantSpeed: 0.5,
     defaultRadius: 2,
     variantRadius: 2,
-    maxSpeed: 2,          // Maximum speed for each particle
+    maxSpeed: 1.4,          // Maximum speed for each particle
     
     // Connection settings
     linkRadius: 250,
