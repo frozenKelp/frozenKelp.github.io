@@ -1,41 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Frigid Shores - A desolate coastline where icy winds whisper secrets of the deep.">
-    <title>Frigid Shores</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #1a1a2e;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            padding: 20px;
-        }
-        h1 {
-            font-size: 3rem;
-            color: #72bcd4;
-        }
-        p {
-            font-size: 1.2rem;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frigid Shores</title>
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <meta name="description" content="Frigid Shores - A desolate coastline where icy winds whisper secrets of the deep.">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* Global reset and basic settings */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      color: #e0e0e0;
+    }
+    /* Background video settings */
+    .video-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    /* Overlay settings for legibility */
+    .overlay {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+    /* Title styling using Playfair Display */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      color: #72bcd4;
+      margin-bottom: 20px;
+    }
+    /* Quote styling using Lora */
+    blockquote {
+      font-family: 'Lora', serif;
+      font-size: 1.8rem;
+      font-style: normal;
+      line-height: 1.4;
+      margin: 0;
+      max-width: 800px;
+    }
+    /* Attribution styling for the quote */
+    .attribution {
+      display: inline-block;
+      margin-left: 200px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Frigid Shores</h1>
-        <p>Amidst a desolate coastline, where icy winds whisper secrets of the deep, lies the Frigid Shores. The waves crash against the frozen sands, echoing tales of forgotten mariners and eldritch mysteries lurking beneath the surface. Jagged cliffs, coated with frost, stand like sentinels against the churning sea, their shadows stretching long beneath the pale, wintry sun. Each dawn unveils a landscape painted in shades of silver and blue, where the ice-capped waters glisten with an eerie light. The air carries the scent of salt and cold, and the distant cries of seabirds drift through the mist. Legends speak of ancient relics buried beneath the permafrost, and those brave enough to explore these shores may find themselves entangled in the haunting embrace of its secrets.</p>
-    </div>
+  <!-- Animated background video -->
+  <video class="video-background" autoplay muted loop>
+    <source src="background.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- Content overlay with title and quote -->
+  <div class="overlay">
+    <h1>Frigid Shores</h1>
+    <blockquote>
+      Imagination is more important than knowledge. For knowledge is limited, whereas imagination embraces the entire world.
+      <br><span class="attribution">— Albert Einstein</span>
+    </blockquote>
+  </div>
 </body>
 </html>
