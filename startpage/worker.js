@@ -197,8 +197,7 @@
     // Main Animation Loop
     // --------------------
     function loop() {
-      applyAttractionOptimized(particles);
-  
+      
       // Mouse interaction: apply force based on mouse proximity.
       if (mouse.x !== null && mouse.y !== null) {
         particles.forEach(particle => {
