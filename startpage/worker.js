@@ -20,7 +20,6 @@
       interactionRadius: 200,
       interactionRadiusSq: 200 * 200,
       forceStrength: 100,
-      attractionStrength: 0.05
     };
   
     // --------------------
@@ -197,7 +196,7 @@
     // Main Animation Loop
     // --------------------
     function loop() {
-      
+
       // Mouse interaction: apply force based on mouse proximity.
       if (mouse.x !== null && mouse.y !== null) {
         particles.forEach(particle => {
