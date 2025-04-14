@@ -150,48 +150,7 @@
         }
       });
     };
-  
-    // --------------------
-    // Attraction Force using Spatial Hashing
-    // --------------------
-    const applyAttractionOptimized = (particlesArray) => {
-      const cellSize = 50;
-      const { grid, getCellKey } = buildGrid(particlesArray, cellSize);
-      const checkedPairs = new Set();
-  
-      grid.forEach((cellParticles, key) => {
-        const [col, row] = key.split(',').map(Number);
-        for (let dc = -1; dc <= 1; dc++) {
-          for (let dr = -1; dr <= 1; dr++) {
-            const neighborKey = `${col + dc},${row + dr}`;
-            if (!grid.has(neighborKey)) continue;
-            const neighborParticles = grid.get(neighborKey);
-            for (const p1 of cellParticles) {
-              for (const p2 of neighborParticles) {
-                if (p1 === p2) continue;
-                const pairKey = p1.id < p2.id ? `${p1.id},${p2.id}` : `${p2.id},${p1.id}`;
-                if (checkedPairs.has(pairKey)) continue;
-                checkedPairs.add(pairKey);
-                const dx = p2.x - p1.x;
-                const dy = p2.y - p1.y;
-                const distSq = dx * dx + dy * dy;
-                if (distSq < opts.interactionRadiusSq && distSq > 25) {
-                  const dist = Math.sqrt(distSq);
-                  const force = opts.attractionStrength / distSq;
-                  const fx = (dx / dist) * force;
-                  const fy = (dy / dist) * force;
-                  p1.vector.x += fx;
-                  p1.vector.y += fy;
-                  p2.vector.x -= fx;
-                  p2.vector.y -= fy;
-                }
-              }
-            }
-          }
-        }
-      });
-    };
-  
+
     // --------------------
     // Draw Particle Connections
     // --------------------
