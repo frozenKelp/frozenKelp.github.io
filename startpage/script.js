@@ -8,7 +8,7 @@
   const videoCount = 23;
   // Support both .webm and .mp4 per slide
   const videos = Array.from({ length: videoCount }, (_, i) => ({
-    mp4: `side${i + 1}.mp4`
+    mp4: `Side${i + 1}.mp4`
   }));
 
   // Cache DOM elements
