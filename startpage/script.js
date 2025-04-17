@@ -1,14 +1,15 @@
-// script.js
-
 (function () {
   'use strict';
   
   // ====================
   // Slideshow & Clock Setup (Main Thread)
   // ====================
-  const imagePath = 'assets/';
-  const imageCount = 23;
-  const images = Array.from({ length: imageCount }, (_, i) => `side${i + 1}.gif`);
+  const videoPath = 'assets/';
+  const videoCount = 23;
+  // Support both .webm and .mp4 per slide
+  const videos = Array.from({ length: videoCount }, (_, i) => ({
+    mp4: `side${i + 1}.mp4`
+  }));
 
   // Cache DOM elements
   const slideshow = document.getElementById('slideshow');
@@ -26,115 +27,120 @@
   }
 
   function getDailyDefaultSlideIndex() {
-    const seed = getSeed();
-    return Math.floor(seededRandom(seed) * imageCount) + 1;
+    return Math.floor(seededRandom(getSeed()) * videoCount) + 1;
   }
 
   // Slide index initialization with localStorage
   let slideIndex = localStorage.getItem('slideIndex');
-  const dailyDefaultSlideIndex = getDailyDefaultSlideIndex();
-  const currentDateString = new Date().toDateString();
+  const dailyDefault = getDailyDefaultSlideIndex();
+  const currentDate = new Date().toDateString();
 
   if (!slideIndex) {
-    slideIndex = dailyDefaultSlideIndex;
+    slideIndex = dailyDefault;
     localStorage.setItem('slideIndex', slideIndex);
   } else {
     slideIndex = parseInt(slideIndex, 10);
-    const lastAccessedDate = localStorage.getItem('lastAccessedDate');
-    if (lastAccessedDate !== currentDateString) {
-      slideIndex = dailyDefaultSlideIndex;
+    if (localStorage.getItem('lastAccessedDate') !== currentDate) {
+      slideIndex = dailyDefault;
       localStorage.setItem('slideIndex', slideIndex);
     }
   }
-  localStorage.setItem('lastAccessedDate', currentDateString);
+  localStorage.setItem('lastAccessedDate', currentDate);
 
-  // Build slideshow HTML once to reduce reflows.
+  // Build slideshow HTML once (with dual-format and preload)
   let slideshowHTML = '';
-  images.forEach((img) => {
-    slideshowHTML += `<div class="mySlides">
-      <img src="${imagePath}${img}" style="cursor:pointer;" onclick="changeSlide(1)">
-    </div>`;
+  videos.forEach((vid) => {
+    slideshowHTML += `
+      <div class="mySlides">
+        <video 
+          preload="auto" 
+          autoplay muted loop playsinline 
+          style="cursor:pointer; width:100%; height:auto;" 
+          onclick="changeSlide(1)">      
+          <source src="${videoPath}${vid.mp4}" type="video/mp4">
+        </video>
+      </div>
+    `;
   });
   slideshow.innerHTML = slideshowHTML;
 
   let animating = false;
 
   // Slide change function with optimized transitions.
-  window.changeSlide = function (n) { // Expose for inline onclick usage.
+  window.changeSlide = function (n) {
     if (animating) return;
-    const slides = document.getElementsByClassName("mySlides");
-    const totalSlides = slides.length;
-    let nextSlideIndex = slideIndex + n;
-    if (nextSlideIndex > totalSlides) nextSlideIndex = 1;
-    else if (nextSlideIndex < 1) nextSlideIndex = totalSlides;
+    const slides = document.getElementsByClassName('mySlides');
+    const total = slides.length;
+    let next = slideIndex + n;
+    if (next > total) next = 1;
+    else if (next < 1) next = total;
 
-    const currentSlide = slides[slideIndex - 1];
-    const nextSlide = slides[nextSlideIndex - 1];
+    const currSlide = slides[slideIndex - 1];
+    const nextSlide = slides[next - 1];
 
-    // Prepare next slide without animation (force reflow)
-    nextSlide.style.transition = "none";
-    nextSlide.style.transform = `translateY(${n > 0 ? "100%" : "-100%"})`;
-    nextSlide.style.opacity = "1";
-    nextSlide.offsetHeight; // Force reflow.
-    nextSlide.style.transition = "transform 0.7s ease, opacity 0.7s ease";
+    // Prepare next slide
+    nextSlide.style.transition = 'none';
+    nextSlide.style.transform = `translateY(${n > 0 ? '100%' : '-100%'})`;
+    nextSlide.style.opacity = '1';
+    nextSlide.offsetHeight; // force reflow
+    nextSlide.style.transition = 'transform 0.7s ease, opacity 0.7s ease';
 
-    // Animate the current and next slides.
-    currentSlide.style.transform = `translateY(${n > 0 ? "-100%" : "100%"})`;
-    currentSlide.style.opacity = "0";
-    nextSlide.style.transform = "translateY(0)";
+    // Animate
+    currSlide.style.transform = `translateY(${n > 0 ? '-100%' : '100%'})`;
+    currSlide.style.opacity = '0';
+    nextSlide.style.transform = 'translateY(0)';
 
     animating = true;
     setTimeout(() => {
-      currentSlide.style.opacity = "0";
-      currentSlide.style.transform = "translateY(0)";
-      currentSlide.style.transition = "none";
-      nextSlide.style.position = "relative";
-      currentSlide.style.position = "absolute";
-      slideIndex = nextSlideIndex;
+      // Reset styles
+      currSlide.style.opacity = '0';
+      currSlide.style.transform = 'translateY(0)';
+      currSlide.style.transition = 'none';
+      nextSlide.style.position = 'relative';
+      currSlide.style.position = 'absolute';
+
+      slideIndex = next;
       localStorage.setItem('slideIndex', slideIndex);
       animating = false;
     }, 700);
   };
 
-  // Set slide visibility based on the current index.
+  // Set initial slide visibility
   function setSlide(n) {
-    const slides = document.getElementsByClassName("mySlides");
+    const slides = document.getElementsByClassName('mySlides');
     Array.from(slides).forEach((slide, i) => {
       if (i === n - 1) {
-        slide.style.opacity = "1";
-        slide.style.position = "relative";
-        slide.style.transition = "none";
-        slide.style.transform = "none";
+        slide.style.opacity = '1';
+        slide.style.position = 'relative';
+        slide.style.transition = 'none';
+        slide.style.transform = 'none';
       } else {
-        slide.style.opacity = "0";
-        slide.style.position = "absolute";
-        slide.style.transition = "none";
-        slide.style.transform = "none";
+        slide.style.opacity = '0';
+        slide.style.position = 'absolute';
+        slide.style.transition = 'none';
+        slide.style.transform = 'none';
       }
     });
   }
   setSlide(slideIndex);
 
-  // Debounce for wheel event
-  let scrollDebounce;
-  window.addEventListener("wheel", (e) => {
-    clearTimeout(scrollDebounce);
-    scrollDebounce = setTimeout(() => {
-      const direction = e.deltaY > 0 ? 1 : -1;
-      changeSlide(direction);
-    }, 100);
+  // Debounced wheel navigation
+  let debounce;
+  window.addEventListener('wheel', (e) => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => changeSlide(e.deltaY > 0 ? 1 : -1), 100);
   });
 
-  // Clock update function.
+  // Clock update
   function updateClock() {
     const now = new Date();
     const day = now.toLocaleDateString('en-GB', { weekday: 'long' });
-    const dayOfMonth = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
     const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = `${day.charAt(0).toUpperCase() + day.slice(1).toLowerCase()} ${dayOfMonth}-${month}-${year} ${time}`;
-    codesContainer.textContent = dateString;
+    document.getElementById('codes').textContent =
+      `${day.charAt(0).toUpperCase()}${day.slice(1).toLowerCase()} ${dd}-${mm}-${yyyy} ${time}`;
   }
   updateClock();
   setInterval(updateClock, 1000);
@@ -142,14 +148,11 @@
   // ====================
   // OffscreenCanvas & Web Worker Setup (Particle Animation)
   // ====================
-
-  const canvas = document.getElementById("canvas");
-
+  const canvas = document.getElementById('canvas');
   if (canvas.transferControlToOffscreen) {
     const offscreen = canvas.transferControlToOffscreen();
     const worker = new Worker('worker.js');
 
-    // Initialize worker with OffscreenCanvas and current window dimensions.
     worker.postMessage({
       type: 'init',
       canvas: offscreen,
@@ -157,41 +160,25 @@
       height: window.innerHeight
     }, [offscreen]);
 
-    // Consolidated mouse event handler function.
-    const canvasState = { x: null, y: null, pressed: false };
-
-    function sendMouseEvent(e, pressed = canvasState.pressed) {
-      canvasState.x = e.clientX;
-      canvasState.y = e.clientY;
-      canvasState.pressed = pressed;
-      worker.postMessage({
-        type: 'mouse',
-        x: canvasState.x,
-        y: canvasState.y,
-        pressed: canvasState.pressed,
-      });
+    const state = { x: null, y: null, pressed: false };
+    function sendMouseEvent(e, pressed = state.pressed) {
+      state.x = e.clientX;
+      state.y = e.clientY;
+      state.pressed = pressed;
+      worker.postMessage({ type: 'mouse', ...state });
     }
 
-    // Forward mouse events.
-    ['mousemove', 'mousedown', 'mouseup'].forEach((eventType) => {
-      document.addEventListener(eventType, (e) => {
-        const isPressed = eventType === 'mousedown' ? true :
-                          eventType === 'mouseup' ? false :
-                          canvasState.pressed;
-        sendMouseEvent(e, isPressed);
-      });
-    });
+    ['mousemove', 'mousedown', 'mouseup'].forEach((type) =>
+      document.addEventListener(type, (e) => {
+        const pressed = type === 'mousedown' ? true : type === 'mouseup' ? false : state.pressed;
+        sendMouseEvent(e, pressed);
+      })
+    );
 
-    // Resize event forwarding.
-    window.addEventListener("resize", () => {
-      worker.postMessage({
-        type: 'resize',
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-    });
+    window.addEventListener('resize', () =>
+      worker.postMessage({ type: 'resize', width: window.innerWidth, height: window.innerHeight })
+    );
   } else {
-    console.error("OffscreenCanvas is not supported by your browser.");
+    console.error('OffscreenCanvas is not supported by your browser.');
   }
-  // The main thread continues running the slideshow and clock functionalities.
 })();
