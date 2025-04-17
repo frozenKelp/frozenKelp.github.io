@@ -1,3 +1,4 @@
+// script.js
 (function () {
   'use strict';
   
@@ -47,22 +48,22 @@
   }
   localStorage.setItem('lastAccessedDate', currentDate);
 
-  // Build slideshow HTML once (with dual-format and preload)
+  // Build slideshow HTML once (with metadata‐only preload)
   let slideshowHTML = '';
   videos.forEach((vid) => {
     slideshowHTML += `
       <div class="mySlides">
         <video 
-          preload="auto" 
-          autoplay muted loop playsinline 
-          style="cursor:pointer; width:100%; height:auto;" 
-          onclick="changeSlide(1)">      
+          preload="metadata" 
+          autoplay muted loop playsinline
+          onclick="changeSlide(1)">
           <source src="${videoPath}${vid.mp4}" type="video/mp4">
         </video>
       </div>
     `;
   });
   slideshow.innerHTML = slideshowHTML;
+
 
   let animating = false;
 
@@ -75,6 +76,8 @@
     if (next > total) next = 1;
     else if (next < 1) next = total;
 
+    enableFullPreload(next);
+    
     const currSlide = slides[slideIndex - 1];
     const nextSlide = slides[next - 1];
 
@@ -124,6 +127,20 @@
   }
   setSlide(slideIndex);
 
+  function enableFullPreload(idx) {
+    const slides = document.getElementsByClassName('mySlides');
+    [idx, idx % videoCount + 1].forEach(i => {
+      const vid = slides[i - 1].querySelector('video');
+      if (vid.preload !== 'auto') {
+        vid.preload = 'auto';
+        vid.load();
+      }
+    });
+  }
+  
+  // …after setSlide(slideIndex):
+  enableFullPreload(slideIndex);
+  
   // Debounced wheel navigation
   let debounce;
   window.addEventListener('wheel', (e) => {

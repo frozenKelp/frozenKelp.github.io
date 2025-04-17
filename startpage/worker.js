@@ -1,3 +1,4 @@
+// worker.js
 (() => {
     'use strict';
     
