@@ -78,74 +78,94 @@
       50% { transform: translateY(-10px); }
     }
 
-    /* Hamburger menu */
-    .hamburger {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 30px;
-      height: 25px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      cursor: pointer;
-      z-index: 1000;
-    }
+/* ...Keep your existing styles above unchanged... */
 
-    .hamburger span {
-      height: 4px;
-      background: #e0e0e0;
-      border-radius: 2px;
-    }
+.hamburger {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  z-index: 1000;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
 
-    /* Dropdown menu */
-    .dropdown {
-      position: absolute;
-      top: 60px;
-      right: 20px;
-      background: rgba(20, 20, 20, 0.9);
-      border-radius: 30px;
-      padding: 20px 30px;
-      display: none;
-      flex-direction: column;
-      gap: 15px;
-      z-index: 999;
-      width: 180px;
-    }
+.hamburger:hover {
+  opacity: 1;
+}
 
-    .dropdown a {
-      color: #e0e0e0;
-      text-decoration: none;
-      font-weight: bold;
-      text-align: right;
-      font-family: 'Lora', serif;
-    }
+.hamburger span {
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
 
-    .dropdown.show {
-      display: flex;
-    }
+/* Updated dropdown: hidden off-screen by default */
+.dropdown {
+  position: absolute;
+  top: 60px;
+  right: -220px; /* start off-screen */
+  background: rgba(20, 20, 20, 0.9);
+  border-radius: 30px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+  width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transition: right 0.4s ease, opacity 0.3s ease;
+}
 
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 2.5rem;
-      }
+.dropdown.show {
+  right: 20px; /* slide into view */
+  opacity: 1;
+  pointer-events: auto;
+}
 
-      blockquote {
-        font-size: 1.2rem;
-      }
+.dropdown a {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-weight: bold;
+  text-align: right;
+  font-family: 'Lora', serif;
+  transition: color 0.3s ease;
+}
 
-      .attribution {
-        margin-left: 0;
-      }
+.dropdown a:hover {
+  color: #72bcd4;
+}
 
-      .dropdown {
-        width: 150px;
-        padding: 15px 20px;
-      }
-    }
+/* Responsive */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  blockquote {
+    font-size: 1.2rem;
+  }
+
+  .attribution {
+    margin-left: 0;
+  }
+
+  .dropdown {
+    width: 150px;
+    padding: 15px 20px;
+  }
+}
+
   </style>
 </head>
+
 <body>
   <!-- Background video with fallback image -->
   <video class="video-background" autoplay muted loop poster="fallback.jpg">
@@ -185,6 +205,16 @@
       const menu = document.getElementById('navMenu');
       menu.classList.toggle('show');
     }
+  
+    // Optional: Close menu if clicked outside
+    document.addEventListener('click', function (e) {
+      const menu = document.getElementById('navMenu');
+      const hamburger = document.querySelector('.hamburger');
+      if (!menu.contains(e.target) && !hamburger.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    });
   </script>
+  
 </body>
 </html>
