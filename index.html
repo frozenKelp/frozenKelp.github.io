@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frigid Shores</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:ital,wght@0,400;1,400&display=swap" />
+  <style>
+    :root {
+      --bg-color: #000;
+      --overlay-bg: rgba(0, 0, 0, 0.6);
+      --primary-color: #72bcd4;
+      --text-color: #e0e0e0;
+      --dropdown-bg: rgba(20, 20, 20, 0.8);
+      --transition-duration: 0.4s;
+      --border-radius: 1rem;
+      --padding: 1rem;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Lora', serif;
+      color: var(--text-color);
+      background: var(--bg-color);
+      overflow: hidden;
+    }
+    video.bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+    .overlay {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: var(--overlay-bg);
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    blockquote {
+      font-size: 1.4rem;
+      max-width: 700px;
+    }
+    /* Hamburger Icon */
+    .menu {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 10;
+      width: 2.5rem;
+      height: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      opacity: 0.3;
+      transition: opacity var(--transition-duration);
+    }
+    .menu:hover {
+      opacity: 0.6;
+    }
+    .menu span {
+      display: block;
+      height: 3px;
+      background: var(--text-color);
+      border-radius: 2px;
+      transition: transform var(--transition-duration), opacity var(--transition-duration);
+    }
+    .menu.open span:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+    }
+    .menu.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .menu.open span:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+    /* Dropdown Menu */
+    .dropdown {
+      position: fixed;
+      top: 4rem;
+      right: 1rem;
+      background: var(--dropdown-bg);
+      border-radius: var(--border-radius);
+      padding: var(--padding);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transform: translateX(120%);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform var(--transition-duration), opacity var(--transition-duration);
+    }
+    .dropdown.open {
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .dropdown a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .dropdown a:hover {
+      color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+
+  <video class="bg" autoplay muted loop poster="fallback.webp">
+    <source src="background.mp4" type="video/mp4" />
+  </video>
+
+  <div class="menu" id="menu-btn" aria-label="Toggle menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <nav class="dropdown" id="dropdown-menu">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Projects</a>
+    <a href="#">Posts</a>
+    <a href="#">Redirect</a>
+  </nav>
+
+  <div class="overlay">
+    <h1>Frigid Shores</h1>
+    <blockquote>
+      Imagination is more important than knowledge. For knowledge is limited, whereas imagination embraces the entire world.
+      <br /><small>— Albert Einstein</small>
+    </blockquote>
+  </div>
+
+  <script>
+    const menuBtn = document.getElementById('menu-btn');
+    const dropdown = document.getElementById('dropdown-menu');
+
+    menuBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      menuBtn.classList.toggle('open');
+      dropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      if (dropdown.classList.contains('open')) {
+        dropdown.classList.remove('open');
+        menuBtn.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
