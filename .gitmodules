@@ -1,6 +1,8 @@
 [submodule "startpage"]
 	path = startpage
 	url = https://github.com/frozenKelp/startpage.git
+    	branch = main
 [submodule "redirect"]
 	path = redirect
 	url = https://github.com/frozenKelp/redirect.git
+    	branch = main
