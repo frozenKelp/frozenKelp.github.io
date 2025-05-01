@@ -1,46 +1,39 @@
 import subprocess
-import os
 
-def run(cmd, cwd=None):
-    return subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+def sh(cmd, cwd=None):
+    return subprocess.run(cmd, cwd=cwd, shell=True, text=True, capture_output=True)
 
-def get_submodules():
-    result = run("git config --file .gitmodules --get-regexp path")
-    submodules = []
-    for line in result.stdout.strip().splitlines():
-        _, path = line.split(" ", 1)
-        submodules.append(path)
-    return submodules
+def submodules():
+    out = sh("git config --file .gitmodules --get-regexp path").stdout
+    return [line.split()[1] for line in out.strip().splitlines()]
 
-def update_submodules():
-    run("git submodule init")
-    run("git submodule update --recursive --remote")
+def hash_at(path):
+    return sh("git rev-parse HEAD", cwd=path).stdout.strip()
 
-    updated = []
-    for sub in get_submodules():
-        print(f"Checking submodule: {sub}")
-        sub_path = os.path.abspath(sub)
-        old_hash = run("git rev-parse HEAD", cwd=sub_path).stdout.strip()
-        run("git fetch", cwd=sub_path)
-        run("git merge origin/main", cwd=sub_path)  # adjust branch if needed
-        new_hash = run("git rev-parse HEAD", cwd=sub_path).stdout.strip()
-        if old_hash != new_hash:
-            print(f"Updated {sub}: {old_hash[:7]} → {new_hash[:7]}")
-            run(f"git add {sub}")
-            updated.append(sub)
-        else:
-            print(f"No changes in {sub}")
-    return updated
+def main():
+    print("⌘ Updating submodules...")
+    subs = submodules()
+    before = {s: hash_at(s) for s in subs}
 
-def commit_and_push(updated_subs):
-    if updated_subs:
-        msg = "updated " + ", ".join(updated_subs)
-        run(f'git commit -m "{msg}"')
-        run("git push")
-        print(f"Committed and pushed: {msg}")
-    else:
-        print("No updates to commit.")
+    sh("git fetch --recurse-submodules --update-head-ok --merge")
+
+    after = {s: hash_at(s) for s in subs}
+    updated = [s for s in subs if before[s] != after[s]]
+
+    if not updated:
+        print("✔ Already up to date.")
+        return
+
+    for s in updated:
+        print(f"↪ {s} updated.")
+        sh(f"git add {s}")
+
+    msg = "updated " + ", ".join(updated)
+    sh(f'git commit -m "{msg}"')
+    sh("git push")
+    print(f"⏏ Pushed: {msg} ⏏")
 
 if __name__ == "__main__":
-    updated = update_submodules()
-    commit_and_push(updated)
+    main()
+    # This script is intended to be run from the root of the repository.
+    # It updates all submodules, commits the changes, and pushes to the remote repository.
