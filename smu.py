@@ -11,7 +11,7 @@ def hash_at(path):
     return sh("git rev-parse HEAD", cwd=path).stdout.strip()
 
 def main():
-    print("⌘ Updating submodules...")
+    print("〖 Updating submodules 〗")
     subs = submodules()
     before = {s: hash_at(s) for s in subs}
 
@@ -31,7 +31,7 @@ def main():
     msg = "updated " + ", ".join(updated)
     sh(f'git commit -m "{msg}"')
     sh("git push")
-    print(f"⏏ Pushed: {msg} ⏏")
+    print(f"⫸ Pushed: {msg}")
 
 if __name__ == "__main__":
     main()
